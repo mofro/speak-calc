@@ -40,7 +40,6 @@ function normalize(text) {
     .replace(/\bfour\b/g, '4').replace(/\bfive\b/g, '5').replace(/\bsix\b/g, '6')
     .replace(/\bseven\b/g, '7').replace(/\beight\b/g, '8').replace(/\bnine\b/g, '9')
     .replace(/\bten\b/g, '10').replace(/\beleven\b/g, '11').replace(/\btwelve\b/g, '12')
-    .replace(/\[^d.%+\-*/()]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 }
