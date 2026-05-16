@@ -4,6 +4,20 @@ import { SpeechRecognizer, Speaker } from './speech.js';
 
 const $ = id => document.getElementById(id);
 
+// ── Debug logger ─────────────────────────────────────────────────────────────
+
+const dbg = (() => {
+  const lines = [];
+  return (msg) => {
+    const t = new Date().toLocaleTimeString('en-US', { hour12: false });
+    lines.unshift(`${t}  ${msg}`);
+    if (lines.length > 8) lines.pop();
+    const el = $('debug-strip');
+    if (el) el.textContent = lines.join('\n');
+    console.log('[speak-calc]', msg);
+  };
+})();
+
 const recognizer = new SpeechRecognizer({ onResult, onError, onStateChange });
 const speaker = new Speaker();
 
@@ -14,6 +28,7 @@ let history = [];
 // ── DOM events ───────────────────────────────────────────────────────────────
 
 $('mic-btn').addEventListener('click', () => {
+  dbg(`mic clicked — listening=${recognizer.listening} supported=${recognizer.supported}`);
   if (recognizer.listening) {
     recognizer.stop();
   } else {
@@ -48,15 +63,18 @@ $('clear-btn').addEventListener('click', () => {
 // ── Speech callbacks ─────────────────────────────────────────────────────────
 
 function onResult(transcript) {
+  dbg(`result: "${transcript}"`);
   $('transcript').textContent = `"${transcript}"`;
   processUtterance(transcript);
 }
 
 function onError(msg) {
-  showError(msg);
+  dbg(`error: ${msg}`);
+  showError(speechErrorHint(msg));
 }
 
 function onStateChange(state) {
+  dbg(`state → ${state}`);
   const btn = $('mic-btn');
   if (state === 'listening') {
     btn.classList.add('listening');
@@ -66,6 +84,18 @@ function onStateChange(state) {
     btn.classList.remove('listening');
     btn.setAttribute('aria-label', 'Start listening');
   }
+}
+
+function speechErrorHint(code) {
+  const hints = {
+    'not-allowed':   'Microphone access denied. Check browser site permissions and reload.',
+    'service-not-allowed': 'Speech service blocked. Try Chrome on localhost.',
+    'no-speech':     'No speech detected. Try speaking louder or closer to the mic.',
+    'network':       'Network error — speech recognition requires an internet connection.',
+    'audio-capture': 'No microphone found. Check your system audio settings.',
+    'aborted':       'Listening was cancelled.',
+  };
+  return hints[code] ?? `Speech error: ${code}`;
 }
 
 // ── Core processing ──────────────────────────────────────────────────────────
@@ -159,6 +189,9 @@ function escHtml(s) {
 if (!recognizer.supported) {
   $('mic-btn').disabled = true;
   $('mic-btn').title = 'Speech not supported — use text input below';
+  dbg('SpeechRecognition API: NOT detected');
+} else {
+  dbg('SpeechRecognition API: detected ✓');
 }
 renderHistory();
 updateMuteBtn();

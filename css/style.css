@@ -103,6 +103,25 @@ header h1 {
   text-align: center;
 }
 
+/* ── Debug strip ─────────────────────────────────────────────────────────── */
+
+#debug-strip {
+  width: 100%;
+  font-size: 0.75rem;
+  font-family: monospace;
+  color: #facc15;
+  background: #1c1400;
+  border: 1px solid #713f12;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  min-height: 2rem;
+}
+
+#debug-strip:empty { display: none; }
+
 /* ── Result card ─────────────────────────────────────────────────────────── */
 
 .result-card {
