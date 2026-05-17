@@ -35,6 +35,7 @@ function normalize(text) {
     .replace(/dollars?/g, '')
     .replace(/bucks?/g, '')
     .replace(/percent/g, '%')
+    .replace(/gratuity/g, 'tip')
     .replace(/and\s+a\s+half/g, '.5')
     .replace(/\bone\b/g, '1').replace(/\btwo\b/g, '2').replace(/\bthree\b/g, '3')
     .replace(/\bfour\b/g, '4').replace(/\bfive\b/g, '5').replace(/\bsix\b/g, '6')
@@ -69,15 +70,20 @@ function extractAllMoney(text) {
 }
 
 function extractPeople(text) {
-  const m = text.match(/(\d+)\s*(?:way|person|people|guest|part)/);
-  return m ? parseInt(m[1], 10) : null;
+  // "3 ways", "3 people", "3 guests", etc.
+  let m = text.match(/(\d+)\s*(?:way|person|people|guest|part)/);
+  if (m) return parseInt(m[1], 10);
+  // "by 3", "divided by 3", "among 3"
+  m = text.match(/(?:by|among)\s+(\d+)/);
+  if (m) return parseInt(m[1], 10);
+  return null;
 }
 
 // ── Intent parsers ───────────────────────────────────────────────────────────
 
 function tryTipSplitTax(text) {
   if (!(text.includes('tip') || text.match(/%/)) ) return null;
-  if (!text.match(/split|way|person|people/)) return null;
+  if (!text.match(/split|way|person|people|divide|among/)) return null;
   if (!text.match(/tax/)) return null;
 
   const nums = extractAllMoney(text);
@@ -90,14 +96,10 @@ function tryTipSplitTax(text) {
 }
 
 function trySplit(text) {
-  if (!text.match(/split|way|divide|each|per\s*person/)) return null;
+  if (!text.match(/split|way|divide|each|per\s*person|among/)) return null;
 
   const bill = extractMoney(text);
-  const people = extractPeople(text) ?? (() => {
-    // "split X ways" without the word "way" attached to a number
-    const m = text.match(/(\d+)\s*way/);
-    return m ? parseInt(m[1], 10) : null;
-  })();
+  const people = extractPeople(text);
   const tipPct = text.includes('tip') ? extractPct(text) : 0;
 
   if (bill == null || people == null) return null;
@@ -133,8 +135,15 @@ function tryPercent(text) {
 }
 
 function tryArithmetic(text) {
-  // Strip any remaining non-math characters
-  const expr = text.replace(/[^\d+\-*/().]/g, '').trim();
+  const expr = text
+    .replace(/\bdivided?\s+by\b/g, '/')
+    .replace(/\bmultiplied?\s+by\b/g, '*')
+    .replace(/\btimes\b/g, '*')
+    .replace(/\bplus\b/g, '+')
+    .replace(/\bminus\b/g, '-')
+    .replace(/\bover\b/g, '/')
+    .replace(/[^\d+\-*/().]/g, '')
+    .trim();
   if (expr.length < 2) return null;
   if (!/[\d]/.test(expr)) return null;
   return { intent: 'arithmetic', params: { expr } };
