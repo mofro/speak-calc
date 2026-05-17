@@ -10,10 +10,13 @@ const dbg = (() => {
   const lines = [];
   return (msg) => {
     const t = new Date().toLocaleTimeString('en-US', { hour12: false });
-    lines.unshift(`${t}  ${msg}`);
-    if (lines.length > 8) lines.pop();
+    lines.push(`${t}  ${msg}`);
+    if (lines.length > 6) lines.shift();
     const el = $('debug-strip');
-    if (el) el.textContent = lines.join('\n');
+    if (el) {
+      el.textContent = lines.join('\n');
+      el.scrollTop = el.scrollHeight;
+    }
     console.log('[speak-calc]', msg);
   };
 })();
