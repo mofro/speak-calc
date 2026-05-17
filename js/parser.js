@@ -32,6 +32,8 @@ export function parse(raw) {
 function normalize(text) {
   return text
     .toLowerCase()
+    .replace(/÷/g, ' divided by ')
+    .replace(/×/g, ' times ')
     .replace(/dollars?/g, '')
     .replace(/bucks?/g, '')
     .replace(/percent/g, '%')
