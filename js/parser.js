@@ -83,7 +83,7 @@ function extractPeople(text) {
 
 function tryTipSplitTax(text) {
   if (!(text.includes('tip') || text.match(/%/)) ) return null;
-  if (!text.match(/split|way|person|people|divide|among/)) return null;
+  if (!text.match(/split|way|person|people|among/)) return null;
   if (!text.match(/tax/)) return null;
 
   const nums = extractAllMoney(text);
@@ -96,7 +96,9 @@ function tryTipSplitTax(text) {
 }
 
 function trySplit(text) {
-  if (!text.match(/split|way|divide|each|per\s*person|among/)) return null;
+  // "divide" alone is too ambiguous — "3 divided by 66" is arithmetic, not split.
+  // Require an unambiguous split word; "divide" only counts alongside them.
+  if (!text.match(/split|way|each|per\s*person|among/)) return null;
 
   const bill = extractMoney(text);
   const people = extractPeople(text);
