@@ -116,8 +116,9 @@ header h1 {
   padding: 8px 12px;
   margin-bottom: 12px;
   line-height: 1.6;
-  white-space: pre-wrap;
-  min-height: 2rem;
+  white-space: pre;
+  height: calc(0.75rem * 1.6 * 3 + 16px); /* exactly 3 lines + padding */
+  overflow: hidden;
 }
 
 #debug-strip:empty { display: none; }
