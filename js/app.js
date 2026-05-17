@@ -49,7 +49,7 @@ $('tax-input').addEventListener('change', () => {
 $('text-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') {
     const val = $('text-input').value.trim();
-    if (val) { processUtterance(val); $('text-input').value = ''; }
+    if (val) { processUtterance(val, 'text'); $('text-input').value = ''; }
   }
 });
 
@@ -65,7 +65,7 @@ $('clear-btn').addEventListener('click', () => {
 function onResult(transcript) {
   dbg(`result: "${transcript}"`);
   $('transcript').textContent = `"${transcript}"`;
-  processUtterance(transcript);
+  processUtterance(transcript, 'mic');
 }
 
 function onError(msg) {
@@ -100,7 +100,7 @@ function speechErrorHint(code) {
 
 // ── Core processing ──────────────────────────────────────────────────────────
 
-function processUtterance(text) {
+function processUtterance(text, source = 'text') {
   const taxPctOverride = parseFloat($('tax-input').value) || null;
   const intent = parse(text);
 
@@ -124,7 +124,7 @@ function processUtterance(text) {
   if (!result) { showError('Could not calculate.'); return; }
 
   displayResult(result);
-  pushHistory({ text, result });
+  pushHistory({ text, source, result });
   speaker.say(result.lines[result.lines.length - 1]);
 }
 
@@ -167,11 +167,13 @@ function pushHistory(entry) {
 function renderHistory() {
   const el = $('history-list');
   if (!history.length) { el.innerHTML = '<li class="empty">No history yet</li>'; return; }
-  el.innerHTML = history.map(h => `
-    <li>
-      <span class="hist-query">${escHtml(h.text)}</span>
+  el.innerHTML = history.map(h => {
+    const label = h.source === 'mic' ? `"${escHtml(h.text)}"` : escHtml(h.text);
+    return `<li>
+      <span class="hist-query">${label}</span>
       <span class="hist-answer">${escHtml(h.result.lines[h.result.lines.length - 1])}</span>
-    </li>`).join('');
+    </li>`;
+  }).join('');
 }
 
 function updateMuteBtn() {
